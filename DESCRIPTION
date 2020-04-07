@@ -11,7 +11,15 @@ Authors@R:
 Description: Your compendium description
 License: What license it uses
 Depends: 
-    holepunch
+    car,
+    dplyr,
+    ggm,
+    ggplot2,
+    gridExtra,
+    lme4,
+    lmerTest,
+    psych,
+    reshape2
 Remotes: 
     karthik/holepunch
 Encoding: UTF-8
