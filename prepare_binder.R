@@ -3,7 +3,7 @@ write_compendium_description(package = "Your compendium name",
                              description = "Your compendium description")
 # to write a description, with dependencies. Be sure to fill in placeholder text
 
-write_dockerfile(maintainer = "your_name") 
+write_dockerfile(maintainer = "Stefanie Meliss") 
 # To write a Dockerfile. It will automatically pick the date of the last 
 # modified file, match it to that version of R and add it here. You can 
 # override this by passing r_date to some arbitrary date
