@@ -13,15 +13,11 @@ License: What license it uses
 Depends: 
     car,
     dplyr,
-    ggm,
     ggplot2,
     gridExtra,
-    holepunch,
     lme4,
     lmerTest,
     psych,
     reshape2
-Remotes: 
-    karthik/holepunch
 Encoding: UTF-8
 LazyData: true

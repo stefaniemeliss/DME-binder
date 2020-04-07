@@ -3,12 +3,11 @@ rm(list = ls())
 
 #### READ IN DATA SET ####
 
-setwd("~/Dropbox/Reading/DME_2014/Behavior")
+#setwd("~/Dropbox/Reading/DME_2014/Behavior")
 
 library(ggplot2)
 library(car)
 library(psych)
-library(ggm)
 library(reshape2)
 source("anovakun_482.txt")
 
