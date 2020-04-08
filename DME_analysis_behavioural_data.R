@@ -3,31 +3,42 @@ rm(list = ls())
 
 #### READ IN DATA SET ####
 
-#setwd("~/Dropbox/Reading/DME_2014/Behavior")
-
+# set up libraries and functions
 library(ggplot2)
-library(car)
 library(psych)
 library(reshape2)
+library(osfr)
+library(dplyr)
+library(lme4)
+library(lmerTest)
+library(car)
 source("anovakun_482.txt")
 
 
+# download dataset from OSF
+#osfr::osf_auth("PleaseUnCommentAndPasteTheCodeFromTheEmailHere") # Authenticate osfr with a personal access token
+osfr::osf_retrieve_file("https://osf.io/tfxjv/") %>% # retrieve file from OSF
+  osfr::osf_download(conflicts = "overwrite") # and download it into project
 
+
+# read in data set
 df <- read.table("DME_behavioural_activation.txt",  header = T)
 
-# fMRI == 1: These are the 51 participants in the final fMRI sample
+# subset data set fMRI == 1: These are the 51 participants in the final fMRI sample
 df <- df[df$fMRI == 1,]
 
-#recode cond
+# recode variable capturing between group mannipulation
 df$cond <- ifelse(df$cond == "C", "No-reward",
                   ifelse(df$cond == "R", "Reward",
                          ifelse(df$cond == "G", "Gambling", NA)))
 
-#ordering data in the same way as in SPM
+# ordering data in the same way as in SPM
 df$orderedcond <- rep(c(1, 3, 2), each =17)
 df <- df[with(df, order(df$orderedcond, df$scan)),]
 df$orderedcond <- as.factor(df$orderedcond)
-df$orderedcond <- recode(df$orderedcond, " 1 = 'No-reward'; 2 = 'Reward'; 3 = 'Gambling' ")
+df$orderedcond <- ifelse(df$orderedcond == "1", "No-reward",
+                         ifelse(df$orderedcond == "2", "Reward",
+                                ifelse(df$orderedcond == "3", "Gambling", NA)))
 
 # a1-a10: 10 questions after session 1 (asked inside the scanner)
 # b1-b10: same 10 questions after session 2 (asked inside the scanner)
@@ -77,6 +88,7 @@ df$orderedcond <- recode(df$orderedcond, " 1 = 'No-reward'; 2 = 'Reward'; 3 = 'G
 #24.	I got dissappointed when I see the cue of the moderately difficult task
 #26.	I got dissappointed when I see the cue of the very difficult task
 #28.	I got dissappointed when I see the cue of the watchstop task
+
 # calculate rewarding value: recode disappointment items and combine them with happiness
 df$post22_r <- car::recode(df$post22, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1" )
 df$post24_r <- car::recode(df$post24, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1" )
@@ -86,6 +98,13 @@ df$rewardvalue_e <- (df$post21 + df$post22_r)/2
 df$rewardvalue_m <- (df$post23 + df$post24_r)/2
 df$rewardvalue_h <- (df$post25 + df$post26_r)/2
 df$rewardvalue_ws <- (df$post27 + df$post28_r)/2
+
+# calculate the correlations between the items
+cor(df$post21, df$post22_r) # extremely-low chance of success
+cor(df$post23, df$post24_r) # moderate chance of success
+cor(df$post25, df$post26_r) # high chance of success
+cor(df$post27, df$post28_r) # watch stop
+
 # Post29: I felt dizzy during the experiment
 # post comparison happiness
 #"which cue did you feel more positive?"
@@ -101,19 +120,26 @@ df$rewardvalue_ws <- (df$post27 + df$post28_r)/2
 # Easy/Mid/Dif/IAT: forget about them
 # Score: Total score that participants obtained
 
-#### 3 (group: no-reward, reward, or gambling) x 3 (chance of success: high chance, moderate chance, or extremely-low chance) mixed ANOVA ####
+#######################################################################
+########################## 3  x 3  MIXED ANOVA ######################## 
+#######################################################################
 
-# intrinsic motivation
+# between factor group: no-reward, reward, or gambling
+# within-factor chance of success: high chance, moderate chance, or extremely-low chance
+
+# ratings of intrinsic motivation #
+# create data frame in long format
 dfPos_im <- melt(df, id.vars = c("id", "cond"), measure.vars = c("pos_im_h", "pos_im_m", "pos_im_e") )
 names(dfPos_im) <- c("id", "cond", "measurement", "rating")
 dfPos_im$chance_success <- gl(3,51,153, label = c("extremely-low", "moderate", "high"))
-#anovakun
+# specify anovakun
 Pos_imanovakun <- dfPos_im
 Pos_imanovakun$measurement <- NULL
 Pos_imanovakun <- Pos_imanovakun[,c("id", "cond", "chance_success", "rating")]
 anovakun(Pos_imanovakun, "AsB", 3, 3, long = T, geta = T)
 
-# rewarding value
+# ratingd of rewarding value #
+# create data frame in long format
 dfRewardvalue <- melt(df, id.vars = c("id", "cond"), measure.vars = c("rewardvalue_h", "rewardvalue_m", "rewardvalue_e") )
 names(dfRewardvalue) <- c("id", "cond", "measurement", "rating")
 dfRewardvalue$chance_success <- gl(3,51,153, label = c("extremely-low", "moderate", "high"))
@@ -123,55 +149,102 @@ Rewardvalueanovakun$measurement <- NULL
 Rewardvalueanovakun <- Rewardvalueanovakun[,c("id", "cond", "chance_success", "rating")]
 anovakun(Rewardvalueanovakun, "AsB", 3, 3, long = T, geta = T)
 
-##### trend analysis ##### 
-library(lme4)
-library(lmerTest)
-library(dplyr)
 
-# intrinsic motivation
+
+#######################################################################
+############################ Trend Analysis  ########################## 
+#######################################################################
+
+# ratings of intrinsic motivation #
+# compute mean of intrinsic motivation for each group for each level of chance of success
 dfPos_im %>% 
   group_by(cond, chance_success) %>% 
   summarise_all(mean)
+# compute mean of intrinsic motivation for all groups for each level of chance of success
 tapply(dfPos_im$rating, dfPos_im$chance_success, mean)
 
-dfPos_im$contrast <- ifelse(dfPos_im$cond == "No-reward" & dfPos_im$chance_success == "extremely-low", 1,
-                            ifelse(dfPos_im$cond == "No-reward" & dfPos_im$chance_success == "moderate", 0,
-                                   ifelse(dfPos_im$cond == "No-reward" & dfPos_im$chance_success == "high", -1, 
-                                          ifelse(dfPos_im$cond == "Reward" & dfPos_im$chance_success == "extremely-low", -1,
-                                                 ifelse(dfPos_im$cond == "Reward" & dfPos_im$chance_success == "moderate", 2,
-                                                        ifelse(dfPos_im$cond == "Reward" & dfPos_im$chance_success == "high", -1, 
-                                                               ifelse(dfPos_im$cond == "Gambling" & dfPos_im$chance_success == "extremely-low", -1,
-                                                                      ifelse(dfPos_im$cond == "Gambling" & dfPos_im$chance_success == "moderate", 0,
-                                                                             ifelse(dfPos_im$cond == "Gambling" & dfPos_im$chance_success == "high", 1, NA 
-                                                                             )))))))))
+# define variable contrast: 
+# examining the orthogonal linear (coded as -1, 0, 1) and the quadratic effects (coded as -1, 2, -1) of chance of success for each group. 
+dfPos_im$contrast <- 
+  # no-reward group: resulting in a decrease in intrinsic motivation as chance of success increases
+  ifelse(dfPos_im$cond == "No-reward" & dfPos_im$chance_success == "extremely-low", 1,
+         ifelse(dfPos_im$cond == "No-reward" & dfPos_im$chance_success == "moderate", 0,
+                ifelse(dfPos_im$cond == "No-reward" & dfPos_im$chance_success == "high", -1, 
+                       # reward group: resulting in a quadratic relationship between intrinsic motivation and chance of success
+                       ifelse(dfPos_im$cond == "Reward" & dfPos_im$chance_success == "extremely-low", -1,
+                              ifelse(dfPos_im$cond == "Reward" & dfPos_im$chance_success == "moderate", 2,
+                                     ifelse(dfPos_im$cond == "Reward" & dfPos_im$chance_success == "high", -1, 
+                                            # resulting in an increase in intrinsic motivation as chance of success increases in gambling group
+                                            ifelse(dfPos_im$cond == "Gambling" & dfPos_im$chance_success == "extremely-low", -1,
+                                                   ifelse(dfPos_im$cond == "Gambling" & dfPos_im$chance_success == "moderate", 0,
+                                                          ifelse(dfPos_im$cond == "Gambling" & dfPos_im$chance_success == "high", 1, NA 
+                                                          )))))))))
 
-
+# compute LME with the defined contrast as predictor for intrinsic motivation across all groups
 trendIntMot <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = dfPos_im, REML = F)
 summary(trendIntMot)
 
-# reward value
+# compute LME with the defined contrast as predictor for intrinsic motivation for each group individually
+# no-reward
+dfPos_im_c <- subset(dfPos_im, dfPos_im$cond == "No-reward")
+trendIntMot_c <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = dfPos_im_c, REML = F)
+summary(trendIntMot_c)
+# reward
+dfPos_im_r <- subset(dfPos_im, dfPos_im$cond == "Reward")
+trendIntMot_r <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = dfPos_im_r, REML = F)
+summary(trendIntMot_r)
+# gambling
+dfPos_im_g <- subset(dfPos_im, dfPos_im$cond == "Gambling")
+trendIntMot_g <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = dfPos_im_g, REML = F)
+summary(trendIntMot_g)
+
+
+# ratings of reward value #
+# compute mean of reward value for each group for each level of chance of success
 dfRewardvalue %>% 
   group_by(cond, chance_success) %>% 
   summarise_all(mean)
+# compute mean of reward value for all groups for each level of chance of success
 tapply(dfRewardvalue$rating, dfRewardvalue$chance_success, mean)
 
-dfRewardvalue$contrast <- ifelse(dfRewardvalue$cond == "No-reward" & dfRewardvalue$chance_success == "extremely-low", 1,
-                            ifelse(dfRewardvalue$cond == "No-reward" & dfRewardvalue$chance_success == "moderate", 0,
-                                   ifelse(dfRewardvalue$cond == "No-reward" & dfRewardvalue$chance_success == "high", -1, 
-                                          ifelse(dfRewardvalue$cond == "Reward" & dfRewardvalue$chance_success == "extremely-low", -1,
-                                                 ifelse(dfRewardvalue$cond == "Reward" & dfRewardvalue$chance_success == "moderate", 0,
-                                                        ifelse(dfRewardvalue$cond == "Reward" & dfRewardvalue$chance_success == "high", 1, 
-                                                               ifelse(dfRewardvalue$cond == "Gambling" & dfRewardvalue$chance_success == "extremely-low", -1,
-                                                                      ifelse(dfRewardvalue$cond == "Gambling" & dfRewardvalue$chance_success == "moderate", 0,
-                                                                             ifelse(dfRewardvalue$cond == "Gambling" & dfRewardvalue$chance_success == "high", 1, NA 
-                                                                             )))))))))
+# define variable contrast: 
+# examining the orthogonal linear (coded as -1, 0, 1) effects  of chance of success for each group. 
+dfRewardvalue$contrast <- 
+  # no-reward group: resulting in a decrease in rewarding value as chance of success increases
+  ifelse(dfRewardvalue$cond == "No-reward" & dfRewardvalue$chance_success == "extremely-low", 1,
+         ifelse(dfRewardvalue$cond == "No-reward" & dfRewardvalue$chance_success == "moderate", 0,
+                ifelse(dfRewardvalue$cond == "No-reward" & dfRewardvalue$chance_success == "high", -1, 
+                       # reward group: resulting in an increase in rewarding value as chance of success increases
+                       ifelse(dfRewardvalue$cond == "Reward" & dfRewardvalue$chance_success == "extremely-low", -1,
+                              ifelse(dfRewardvalue$cond == "Reward" & dfRewardvalue$chance_success == "moderate", 0,
+                                     ifelse(dfRewardvalue$cond == "Reward" & dfRewardvalue$chance_success == "high", 1, 
+                                            # gambling group: resulting in an increase in rewarding value as chance of success increases
+                                            ifelse(dfRewardvalue$cond == "Gambling" & dfRewardvalue$chance_success == "extremely-low", -1,
+                                                   ifelse(dfRewardvalue$cond == "Gambling" & dfRewardvalue$chance_success == "moderate", 0,
+                                                          ifelse(dfRewardvalue$cond == "Gambling" & dfRewardvalue$chance_success == "high", 1, NA 
+                                                          )))))))))
 
-
+# compute LME with the defined contrast as predictor for rewarding value across all groups
 trendRewardValue <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = dfRewardvalue, REML = F)
 summary(trendRewardValue)
 
+# compute LME with the defined contrast as predictor for rewarding value for each group individually
+# no-reward
+dfRewardvalue_c <- subset(dfRewardvalue, dfRewardvalue$cond == "No-reward")
+trendRewardValue_c <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = dfRewardvalue_c, REML = F)
+summary(trendRewardValue_c)
+# reward
+dfRewardvalue_r <- subset(dfRewardvalue, dfRewardvalue$cond == "Reward")
+trendRewardValue_r <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = dfRewardvalue_r, REML = F)
+summary(trendRewardValue_r)
+# gambling
+dfRewardvalue_g <- subset(dfRewardvalue, dfRewardvalue$cond == "Gambling")
+trendRewardValue_r <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = dfRewardvalue_g, REML = F)
+summary(trendRewardValue_r)
+
+
+
 #### code to create Figure 2 ####
-setwd("/Users/stefaniemeliss/Dropbox/Reading/DME_2014/Publication/paper/")
 
 varWithin <- "Chance of success"
 levelWithin <- c("Extremely-low","Moderate","High")
@@ -233,8 +306,8 @@ levels(outposgraphAvgContrastEstimate$vars) <- levelWithinReordered
 # plotting contrast estimates
 outg_C <- ggplot(outposgraphAvgContrastEstimate, aes(cond, mean, fill = vars))  + theme_classic()
 outg_C <- outg_C + geom_bar(stat="identity", position="dodge") + geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.1, position=position_dodge(0.9)) +
- scale_x_discrete(limits=groupNames) + labs(x=xLab, y=yLab[2], fill = varWithin, title = title[3]) +
- theme(axis.text=element_text(size=20), axis.title=element_text(size=20, face="bold"), title=element_text(size =20, face="bold"), legend.title = element_text(size=20), legend.text = element_text(size = 20)) + coord_cartesian(ylim = c(-1, 10)) + scale_fill_brewer(palette = 14)
+  scale_x_discrete(limits=groupNames) + labs(x=xLab, y=yLab[2], fill = varWithin, title = title[3]) +
+  theme(axis.text=element_text(size=20), axis.title=element_text(size=20, face="bold"), title=element_text(size =20, face="bold"), legend.title = element_text(size=20), legend.text = element_text(size = 20)) + coord_cartesian(ylim = c(-1, 10)) + scale_fill_brewer(palette = 14)
 outg_C
 ggsave("Figure2C.jpeg")
 
