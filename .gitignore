@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+Behaviour.csv
+peak_leftStriatum_contrastEstimates.txt
+peak_rightStriatum_contrastEstimates.txt
