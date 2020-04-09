@@ -1,23 +1,28 @@
 Type: Compendium
-Package: Your compendium name
-Title: What the Package Does (One Line, Title Case)
+Package: Motivated for near impossibility
+Title: Behavioural Analysis
 Version: 0.0.1
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Stefanie",
+           family = "Meliss",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
+           email = "s.meliss@reading.ac.uk",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Your compendium description
+Description: Behavioural analysis on how task type and
+    reward modulate intrinsic motivation and the striatal activation for
+    extremely difficult task
 License: What license it uses
 Depends: 
     car,
     dplyr,
     ggplot2,
     gridExtra,
+    knitr,
     lme4,
     lmerTest,
+    osfr,
     psych,
-    reshape2
+    reshape2,
+    rmarkdown
 Encoding: UTF-8
 LazyData: true

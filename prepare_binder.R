@@ -1,6 +1,6 @@
-#library(holepunch)
-write_compendium_description(package = "Your compendium name", 
-                             description = "Your compendium description")
+library(holepunch)
+write_compendium_description(package = "Motivated for near impossibility", 
+                             description = "Behavioural analysis on how task type and reward modulate intrinsic motivation and the striatal activation for extremely difficult task")
 # to write a description, with dependencies. Be sure to fill in placeholder text
 
 write_dockerfile(maintainer = "Stefanie Meliss") 
@@ -19,3 +19,5 @@ generate_badge() # This generates a badge for your readme.
 # ready ahead of time.
 build_binder()
 # 🤞🚀
+
+
