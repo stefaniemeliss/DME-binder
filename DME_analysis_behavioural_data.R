@@ -21,15 +21,10 @@ source("anovakun_482.txt") # anovakun package retrieved from http://riseki.php.x
 
 # download datasets from OSF
 #osfr::osf_auth("PleaseUnCommentAndPasteTheCodeFromTheEmailHere") # Authenticate osfr with a personal access token
-osfr::osf_retrieve_file("https://osf.io/tfxjv/") %>% # retrieve file from OSF
-  osfr::osf_download(conflicts = "overwrite") # and download it into project
-
 osfr::osf_retrieve_file("https://osf.io/qgbd6/") %>% # retrieve file from OSF
   osfr::osf_download(conflicts = "overwrite") # and download it into project
 
-
 # read in data set
-df <- read.table("DME_behavioural_activation.txt",  header = T)
 df <- read.csv("Behaviour.csv")
 
 # subset data set fMRI == 1: These are the 51 participants in the final fMRI sample
@@ -170,29 +165,34 @@ df$val_ws <- (df$post27 + df$post28_r)/2 # watch stop
 ########################## CONTRAST ESTIMATES ######################## 
 ######################################################################   
 
-# find out how these would have been created!!
+# the contrast estimates come from the 2017_DME/GLM/GLM1/2nd-level/ANOVA/TwoWay/SWWS_/SPM.mat file
+# ROIs created in marsbar (Build ROI --> point coordinate --> peak voxel [-9 5 -8] and [9 5 -8]
+# ./points_coordinate_mm_-9_5_-8_roi.mat & ./points_coordinate_mm_9_5_-8_roi.mat
+# extracted ROI data saved in file ./extracted_point_coordinates_-9_5_-8_and_9_5_-8_mres.mat
+# txt.files created with ./save_extracted_contrast_estimates.m
 
-# #### read in values from .txt file ####
-# left <- read.delim("/Volumes/DATA UOR/2017_DME/GLM/GLM1/2nd-level/ANOVA/TwoWay/SWWS_/lefts.txt", header = F, sep = "\t")
-# right <- read.delim("/Volumes/DATA UOR/2017_DME/GLM/GLM1/2nd-level/ANOVA/TwoWay/SWWS_/rights.txt", header = F, sep = "\t")
-# 
-# #### adding to data set ####
-# df$left_low <- left$V1
-# df$left_mod <- left$V2
-# df$left_high <- left$V3
-# 
-# df$right_low <- right$V1
-# df$right_mod <- right$V2
-# df$right_high <- right$V3
 
-df$left_low <- df$leftContrastEstimate_D
-df$left_mod <- df$leftContrastEstimate_M
-df$left_high <- df$leftContrastEstimate_E
+# download datasets from OSF
+#osfr::osf_auth("PleaseUnCommentAndPasteTheCodeFromTheEmailHere") # Authenticate osfr with a personal access token
+# left peak
+osfr::osf_retrieve_file("https://osf.io/dyvrf/") %>% # retrieve file from OSF
+  osfr::osf_download(conflicts = "overwrite") # and download it into project
+# right peak
+osfr::osf_retrieve_file("https://osf.io/9mzsq/") %>% # retrieve file from OSF
+  osfr::osf_download(conflicts = "overwrite") # and download it into project
 
-df$right_low <- df$rightContrastEstimate_D
-df$right_mod <- df$rightContrastEstimate_M
-df$right_high <- df$rightContrastEstimate_E
+# read in values from .txt file 
+left <- read.delim("peak_leftStriatum_contrastEstimates.txt", header = F, sep = "\t")
+right <- read.delim("peak_rightStriatum_contrastEstimates.txt", header = F, sep = "\t")
 
+# add values to data set 
+df$left_low <- left$V1 # extremely-low chance of success
+df$left_mod <- left$V2 # moderate chance of success
+df$left_high <- left$V3 # high chance of success
+
+df$right_low <- right$V1 # extremely-low chance of success
+df$right_mod <- right$V2 # moderate chance of success
+df$right_high <- right$V3 # high chance of success
 
 #######################################################################
 ########################## 3  x 3  MIXED ANOVA ######################## 
@@ -331,6 +331,9 @@ title <- c("(A) Intrinsic motivation", "(B) Rewarding value", "(C) Activation pa
 xLab <- "Experimental group"
 yLab <- c("Rating", "Contrast estimate SW - WS")
 
+titleSize <- 16
+axisSize <- 12
+
 ## (A) INTRINSIC MOTIVATION ##
 # get descriptes of the ratings of intrinsic motivation for each group
 mot <- describeBy(df[, c( "mot_high", "mot_mod", "mot_low")], group=df$cond)
@@ -344,7 +347,8 @@ levels(graph_mot$vars) <- levelWithinReordered
 outg_A <- ggplot(graph_mot, aes(cond, mean, fill = vars)) + theme_classic()
 outg_A <- outg_A + geom_bar(stat="identity", position="dodge") + geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.1, position=position_dodge(0.9)) + 
   scale_x_discrete(limits=groupNames) + labs(x=xLab, y=yLab[1], fill = varWithin, title = title[1]) +
-  theme(axis.text=element_text(size=20), axis.title=element_text(size=20, face="bold"), title=element_text(size =20, face="bold"), legend.title = element_text(size=20), legend.text = element_text(size = 20)) + coord_cartesian(ylim = c(1, 7)) + scale_fill_brewer(palette = 14)
+  theme(axis.text=element_text(size=axisSize), axis.title=element_text(size=axisSize, face="bold"), title=element_text(size = titleSize, face="bold"), legend.title = element_text(size=axisSize), legend.text = element_text(size = axisSize)) + 
+  coord_cartesian(ylim = c(1, 7)) + scale_fill_brewer(palette = 14)
 outg_A
 ggsave("Figure2A.jpeg")
 
@@ -362,7 +366,8 @@ levels(outposgraphValue$vars) <-  levelWithinReordered
 outg_B <- ggplot(outposgraphValue, aes(cond, mean, fill = vars)) + theme_classic()
 outg_B <- outg_B + geom_bar(stat="identity", position="dodge") + geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.1, position=position_dodge(0.9)) + 
   scale_x_discrete(limits=groupNames) + labs(x=xLab, y=yLab[1], fill = varWithin, title = title[2]) +
-  theme(axis.text=element_text(size=20), axis.title=element_text(size=20, face="bold"), title=element_text(size =20, face="bold"), legend.title = element_text(size=20), legend.text = element_text(size = 20)) + coord_cartesian(ylim = c(1, 7)) + scale_fill_brewer(palette = 14)
+  theme(axis.text=element_text(size=axisSize), axis.title=element_text(size=axisSize, face="bold"), title=element_text(size = titleSize, face="bold"), legend.title = element_text(size=axisSize), legend.text = element_text(size = axisSize)) + 
+  coord_cartesian(ylim = c(1, 7)) + scale_fill_brewer(palette = 14)
 outg_B
 ggsave("Figure2B.jpeg")
 
@@ -386,7 +391,8 @@ levels(graph_peak$vars) <- levelWithinReordered
 outg_C <- ggplot(graph_peak, aes(cond, mean, fill = vars))  + theme_classic()
 outg_C <- outg_C + geom_bar(stat="identity", position="dodge") + geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.1, position=position_dodge(0.9)) +
   scale_x_discrete(limits=groupNames) + labs(x=xLab, y=yLab[2], fill = varWithin, title = title[3]) +
-  theme(axis.text=element_text(size=20), axis.title=element_text(size=20, face="bold"), title=element_text(size =20, face="bold"), legend.title = element_text(size=20), legend.text = element_text(size = 20)) + coord_cartesian(ylim = c(-1, 10)) + scale_fill_brewer(palette = 14)
+  theme(axis.text=element_text(size=axisSize), axis.title=element_text(size=axisSize, face="bold"), title=element_text(size = titleSize, face="bold"), legend.title = element_text(size=axisSize), legend.text = element_text(size = axisSize)) + 
+  coord_cartesian(ylim = c(-1, 8)) + scale_fill_brewer(palette = 14)
 outg_C
 ggsave("Figure2C.jpeg")
 
