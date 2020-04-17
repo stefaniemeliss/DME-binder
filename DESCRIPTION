@@ -13,6 +13,7 @@ Description: Behavioural analysis on how task type and
     extremely difficult task
 License: What license it uses
 Depends: 
+    afex,
     car,
     dplyr,
     ggplot2,
@@ -20,9 +21,13 @@ Depends:
     knitr,
     lme4,
     lmerTest,
+    lsmeans,
     osfr,
     psych,
     reshape2,
     rmarkdown
+Remotes: 
+    karthik/holepunch,
+    ropensci/osfr
 Encoding: UTF-8
 LazyData: true
