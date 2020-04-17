@@ -26,6 +26,7 @@ library(dplyr)
 library(lme4)
 library(lmerTest)
 library(car)
+library(lsmeans)
 source("anovakun_482.txt") # anovakun package retrieved from http://riseki.php.xdomain.jp/index.php?ANOVA君%2FANOVA君の使い方
 
 
@@ -220,8 +221,8 @@ anovakun(anovakun_val, "AsB", 3, 3, long = T, geta = T)
 ```
 
 
-# Trend Analysis 
-## DEPENDENT VARIABLE 1: ratings of intrinsic motivation
+# Trend Analysis whole sample
+## DEPENDENT VARIABLE 1: ratings of intrinsic motivation (LME)
 
 ```{r trend_mot, include=TRUE, echo=TRUE}
 # define variable contrast: 
@@ -245,24 +246,53 @@ df_mot$contrast <-
 trend_mot <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = df_mot, REML = F)
 summary(trend_mot)
 
-# compute LME with the defined contrast as predictor for intrinsic motivation for each group individually
-# no-reward
-df_mot_c <- subset(df_mot, df_mot$cond == "No-reward")
-trend_mot_c <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = df_mot_c, REML = F)
-summary(trend_mot_c)
-# reward
-df_mot_r <- subset(df_mot, df_mot$cond == "Reward")
-trend_mot_r <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = df_mot_r, REML = F)
-summary(trend_mot_r)
-# gambling
-df_mot_g <- subset(df_mot, df_mot$cond == "Gambling")
-trend_mot_g <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = df_mot_g, REML = F)
-summary(trend_mot_g)
 ```
 
+# Trend Analysis whole sample
+## DEPENDENT VARIABLE 1: ratings of intrinsic motivation (afex)
 
-# Trend Analysis 
-## DEPENDENT VARIABLE 2: ratings of rewarding value 
+```{r trend_mot_afex, include=TRUE, echo=TRUE}
+# specify aov_car
+aovcar_mot <- afex::aov_car(rating ~ cond*measurement + Error(id / measurement), data = df_mot) # specify model
+aovcar_mot
+lsm_mot <- lsmeans(aovcar_mot, specs = ~ cond*measurement) # get mean values per measurement and group
+lsm_mot
+# look at contrast: gambling-low=-1, control-low=1, reward-low=-1; gambling-mod=0, control-mod=0, reward-mod=2; gambling-high=1, control-high=-1, reward-high=-1
+contrast(lsm_mot, list(mycon = c(-1,1,-1,0,0,2,1,-1,-1))) 
+
+```
+
+# Trend Analysis within each group
+## DEPENDENT VARIABLE 1: ratings of intrinsic motivation (afex)
+
+```{r trend_mot_afex_group, include=TRUE, echo=TRUE}
+# specify the aov_car and test for polynomial contrasts for each group
+# no-reward
+df_mot_c <- subset(df_mot, df_mot$cond == "No-reward") # subset data
+aovcar_mot_c <- afex::aov_car(rating ~ measurement + Error(id / measurement), data = df_mot_c) # specify model
+aovcar_mot_c
+lsm_mot_c <- lsmeans(aovcar_mot_c, specs = ~ measurement) # get mean values per measurement
+lsm_mot_c
+contrast(lsm_mot_c, "poly") # look at polynomial contrasts
+# reward
+df_mot_r <- subset(df_mot, df_mot$cond == "Reward") # subset data
+aovcar_mot_r <- afex::aov_car(rating ~ measurement + Error(id / measurement), data = df_mot_r) # specify model
+aovcar_mot_r
+lsm_mot_r <- lsmeans(aovcar_mot_r, specs = ~ measurement) # get mean values per measurement
+lsm_mot_r
+contrast(lsm_mot_r, "poly") # look at polynomial contrasts
+# gambling
+df_mot_g <- subset(df_mot, df_mot$cond == "Gambling") # subset data
+aovcar_mot_g <- afex::aov_car(rating ~ measurement + Error(id / measurement), data = df_mot_g) # specify model
+aovcar_mot_g
+lsm_mot_g <- lsmeans(aovcar_mot_g, specs = ~ measurement) # get mean values per measurement
+lsm_mot_g
+contrast(lsm_mot_g, "poly") # look at polynomial contrasts
+
+```
+
+# Trend Analysis whole sample
+## DEPENDENT VARIABLE 2: ratings of rewarding value (LME)
 
 ```{r trend_val, include=TRUE, echo=TRUE}
 # define variable contrast: 
@@ -286,20 +316,51 @@ df_val$contrast <-
 trend_val <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = df_val, REML = F)
 summary(trend_val)
 
-# compute LME with the defined contrast as predictor for rewarding value for each group individually
-# no-reward
-df_val_c <- subset(df_val, df_val$cond == "No-reward")
-trend_val_c <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = df_val_c, REML = F)
-summary(trend_val_c)
-# reward
-df_val_r <- subset(df_val, df_val$cond == "Reward")
-trend_val_r <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = df_val_r, REML = F)
-summary(trend_val_r)
-# gambling
-df_val_g <- subset(df_val, df_val$cond == "Gambling")
-trend_val_r <- lmer(rating ~ 1 + contrast + (1 + contrast | id), data = df_val_g, REML = F)
-summary(trend_val_r)
 ```
+
+# Trend Analysis whole sample
+## DEPENDENT VARIABLE 2: ratings of rewarding value (afex)
+
+```{r trend_val_afex, include=TRUE, echo=TRUE}
+# specify aov_car
+aovcar_val <- afex::aov_car(rating ~ cond*measurement + Error(id / measurement), data = df_val) # specify model
+aovcar_val
+lsm_val <- lsmeans(aovcar_val, specs = ~ cond*measurement) # get mean values per measurement and group
+lsm_val
+# look at contrast: gambling-low=-1, control-low=1, reward-low=-1; gambling-mod=0, control-mod=0, reward-mod=0; gambling-high=1, control-high=-1, reward-high=1
+contrast(lsm_val, list(mycon = c(-1,1,-1,0,0,0,1,-1,1))) 
+
+```
+
+# Trend Analysis within each group
+## DEPENDENT VARIABLE 2: ratings of rewarding value (afex)
+
+```{r trend_val_afex_group, include=TRUE, echo=TRUE}
+# specify the aov_car and test for polynomial contrasts for each group
+# no-reward
+df_val_c <- subset(df_val, df_val$cond == "No-reward") # subset data
+aovcar_val_c <- afex::aov_car(rating ~ measurement + Error(id / measurement), data = df_val_c) # specify model
+aovcar_val_c
+lsm_val_c <- lsmeans(aovcar_val_c, specs = ~ measurement) # get mean values per measurement
+lsm_val_c
+contrast(lsm_val_c, "poly") # look at polynomial contrasts
+# reward
+df_val_r <- subset(df_val, df_val$cond == "Reward") # subset data
+aovcar_val_r <- afex::aov_car(rating ~ measurement + Error(id / measurement), data = df_val_r) # specify model
+aovcar_val_r
+lsm_val_r <- lsmeans(aovcar_val_r, specs = ~ measurement) # get mean values per measurement
+lsm_val_r
+contrast(lsm_val_r, "poly") # look at polynomial contrasts
+# gambling
+df_val_g <- subset(df_val, df_val$cond == "Gambling") # subset data
+aovcar_val_g <- afex::aov_car(rating ~ measurement + Error(id / measurement), data = df_val_g) # specify model
+aovcar_val_g
+lsm_val_g <- lsmeans(aovcar_val_g, specs = ~ measurement) # get mean values per measurement
+lsm_val_g
+contrast(lsm_val_g, "poly") # look at polynomial contrasts
+
+```
+
 
 # GRAPHS
 
