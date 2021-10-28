@@ -450,8 +450,8 @@ setwd(file.path(getwd(), "param_mod"))
 subjects <-  as.character(df$scan)
 
 # define list of modulators
-modulator <- c("mot_high", "mot_mod", "mot_low",
-               "val_high", "val_mod", "val_low")
+modulator <- c("mot_low", "mot_mod", "mot_high", 
+               "val_low", "val_mod", "val_high")
 value <- numeric(length(modulator))
 
 # name = "KM13121702"
