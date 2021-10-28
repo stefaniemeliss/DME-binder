@@ -509,9 +509,10 @@ for (name in subjects){
   # add correlation to df
   df$cor[df$scan == paste(name)] <- cor
   
-  # save 
+  # save as tsv
   write.table(parametric_mod, file = paste0(name, "_param_mod.txt"), sep="\t", col.names = F, row.names = F)
 
-  #rm(parametric_mod, parametric_mod_c)
+  # remove objects no longer needed
+  rm(parametric_mod, parametric_mod_c, mean_mot, mean_val, val_c, mot_c)
 }
 
