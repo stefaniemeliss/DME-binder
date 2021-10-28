@@ -89,11 +89,11 @@ df$mot_ws <- (8 + df$post10 - df$post11 + df$post12)/3 # watch stop
 mot_high <- df[,c("post1", "post2", "post3")] # high chance of success
 psych::alpha(mot_high, keys = "post2") # post2 reversely coded
 mot_mod <- df[,c("post4", "post5", "post6")] # moderate chance of success
-alpha(mot_mod, keys = "post5") # post5 reversely coded
+psych::alpha(mot_mod, keys = "post5") # post5 reversely coded
 mot_low <- df[,c("post7", "post8", "post9")] # extremely-low chance of success
-alpha(mot_low, keys = "post8") # post8 reversely coded
+psych::alpha(mot_low, keys = "post8") # post8 reversely coded
 mot_ws <- df[,c("post10", "post11", "post12")] # watch stop
-alpha(mot_ws, keys = "post11") # post11 reversely coded
+psych::alpha(mot_ws, keys = "post11") # post11 reversely coded
 
 # difficulty
 #post13.	The easy task was difficult
@@ -436,4 +436,82 @@ outg_C <- outg_C + geom_bar(stat="identity", position="dodge") + geom_errorbar(a
   coord_cartesian(ylim = c(-1, 8)) + scale_fill_brewer(palette = 14)
 outg_C
 ggsave("Figure2C.jpeg")
+
+#################################################################################  
+##################### extract values for parametric modulation ################## 
+#################################################################################  
+
+# create folder to save files
+dir.create(file.path(getwd(), "param_mod"))
+setwd(file.path(getwd(), "param_mod"))
+
+
+# define scan IDs
+subjects <-  as.character(df$scan)
+
+# define list of modulators
+modulator <- c("mot_high", "mot_mod", "mot_low",
+               "val_high", "val_mod", "val_low")
+value <- numeric(length(modulator))
+
+# name = "KM13121702"
+for (name in subjects){
+  
+  # create df
+  parametric_mod <- data.frame(modulator, value)
+  
+  # loop through all modulators
+  for (m in seq_along(modulator)){
+    
+    # extract the subject's raw value for each parametric modulator
+    parametric_mod$value[m] <- df[df$scan == paste0(name), paste0(modulator[m])]
+    
+  }
+  
+  # compute mean value for motivation and rewarding value
+  mean_mot <- mean(parametric_mod$value[grepl("mot", parametric_mod$modulator)])
+  mean_val <- mean(parametric_mod$value[grepl("val", parametric_mod$modulator)])
+  
+  # create new df for centered values
+  parametric_mod_c <- data.frame(modulator, value)
+  
+  # change name of modulators
+  parametric_mod_c$modulator <- paste0(parametric_mod_c$modulator, "_c")
+  
+  # compute centered values for motivation and rewarding value
+  
+  # loop through all modulators
+  for (m in seq_along(modulator)){
+    
+    if (grepl("mot", modulator[m])) {
+      
+      # substract mean mot from raw value
+      parametric_mod_c$value[m] <- df[df$scan == paste0(name), paste0(modulator[m])] - mean_mot
+      
+    } else {
+      
+      # substract mean mot from raw value
+      parametric_mod_c$value[m] <- df[df$scan == paste0(name), paste0(modulator[m])] - mean_val
+      
+    }
+    
+  }
+  
+  # combine raw values and centered values
+  parametric_mod <- rbind(parametric_mod, parametric_mod_c)
+  
+  # compute correlation between demeaned emotion and motivation
+  mot_c <- parametric_mod_c$value[grepl("mot", parametric_mod_c$modulator)]
+  val_c <- parametric_mod_c$value[grepl("val", parametric_mod_c$modulator)]
+  cor <-  cor(mot_c, val_c)
+  print(paste(name, df$cond[df$scan == paste(name)], cor))
+  
+  # add correlation to df
+  df$cor[df$scan == paste(name)] <- cor
+  
+  # save 
+  write.table(parametric_mod, file = paste0(name, "_param_mod.txt"), sep="\t", col.names = F, row.names = F)
+
+  #rm(parametric_mod, parametric_mod_c)
+}
 
