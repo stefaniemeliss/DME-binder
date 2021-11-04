@@ -505,6 +505,7 @@ for (name in subjects){
   val_c <- parametric_mod_c$value[grepl("val", parametric_mod_c$modulator)]
   cor <-  cor(mot_c, val_c)
   print(paste(name, df$cond[df$scan == paste(name)], cor))
+  print(paste(name, df$cond[df$scan == paste(name)], "SD mot:", round(sd(mot_c), 2), "SD val:", round(sd(val_c), 2), ""))
   
   # add correlation to df
   df$cor[df$scan == paste(name)] <- cor
