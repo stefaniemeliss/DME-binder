@@ -202,14 +202,6 @@ right <- read.delim("estimates_right_peak_voxel.txt", header = F, sep = "\t")
 # df$right_high <- right$V3 # high chance of success
 
 # add values to data set 
-#df$left_low[ 1:17] <- left$V1[ 1:17] # extremely-low chance of success - control
-#df$left_low[18:34] <- left$V1[18:34] # extremely-low chance of success - reward
-#df$left_low[35:51] <- left$V1[35:51] # extremely-low chance of success - gambling
-
-#df$left_mod[ 1:17] <- left$V1[ 1:17] # extremely-low chance of success - control
-#df$left_mod[18:34] <- left$V1[18:34] # extremely-low chance of success - reward
-#df$left_mod[35:51] <- left$V1[35:51] # extremely-low chance of success - gambling
-
 df$left_low[1:17] <- left$V1[ 1:17] # extremely-low chance of success - control
 df$left_mod[1:17] <- left$V1[18:34] # moderate chance of success - control
 df$left_high[1:17] <- left$V1[35:51] # high chance of success - control
