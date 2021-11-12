@@ -177,24 +177,64 @@ df$val_ws <- (df$post27 + df$post28_r)/2 # watch stop
 # download datasets from OSF
 #osfr::osf_auth("PleaseUnCommentAndPasteTheCodeFromTheEmailHere") # Authenticate osfr with a personal access token
 # left peak
-osfr::osf_retrieve_file("https://osf.io/dyvrf/") %>% # retrieve file from OSF
+#osfr::osf_retrieve_file("https://osf.io/dyvrf/") %>% # retrieve file from OSF
+osfr::osf_retrieve_file("https://osf.io/uw2t7/") %>% # retrieve file from OSF
   osfr::osf_download(conflicts = "overwrite") # and download it into project
 # right peak
-osfr::osf_retrieve_file("https://osf.io/9mzsq/") %>% # retrieve file from OSF
+#osfr::osf_retrieve_file("https://osf.io/9mzsq/") %>% # retrieve file from OSF
+osfr::osf_retrieve_file("https://osf.io/jsmf9/") %>% # retrieve file from OSF
   osfr::osf_download(conflicts = "overwrite") # and download it into project
 
 # read in values from .txt file 
 left <- read.delim("peak_leftStriatum_contrastEstimates.txt", header = F, sep = "\t")
 right <- read.delim("peak_rightStriatum_contrastEstimates.txt", header = F, sep = "\t")
 
-# add values to data set 
-df$left_low <- left$V1 # extremely-low chance of success
-df$left_mod <- left$V2 # moderate chance of success
-df$left_high <- left$V3 # high chance of success
+left <-  read.delim("estimates_left_peak_voxel.txt", header = F, sep = "\t")
+right <- read.delim("estimates_right_peak_voxel.txt", header = F, sep = "\t")
 
-df$right_low <- right$V1 # extremely-low chance of success
-df$right_mod <- right$V2 # moderate chance of success
-df$right_high <- right$V3 # high chance of success
+# # add values to data set 
+# df$left_low <- left$V1 # extremely-low chance of success
+# df$left_mod <- left$V2 # moderate chance of success
+# df$left_high <- left$V3 # high chance of success
+# 
+# df$right_low <- right$V1 # extremely-low chance of success
+# df$right_mod <- right$V2 # moderate chance of success
+# df$right_high <- right$V3 # high chance of success
+
+# add values to data set 
+#df$left_low[ 1:17] <- left$V1[ 1:17] # extremely-low chance of success - control
+#df$left_low[18:34] <- left$V1[18:34] # extremely-low chance of success - reward
+#df$left_low[35:51] <- left$V1[35:51] # extremely-low chance of success - gambling
+
+#df$left_mod[ 1:17] <- left$V1[ 1:17] # extremely-low chance of success - control
+#df$left_mod[18:34] <- left$V1[18:34] # extremely-low chance of success - reward
+#df$left_mod[35:51] <- left$V1[35:51] # extremely-low chance of success - gambling
+
+df$left_low[1:17] <- left$V1[ 1:17] # extremely-low chance of success - control
+df$left_mod[1:17] <- left$V1[18:34] # moderate chance of success - control
+df$left_high[1:17] <- left$V1[35:51] # high chance of success - control
+
+df$left_low[18:34] <- left$V1[52:68] # extremely-low chance of success - reward
+df$left_mod[18:34] <- left$V1[69:85] # moderate chance of success - reward
+df$left_high[18:34] <- left$V1[86:102] # high chance of success - reward
+
+df$left_low[35:51] <- left$V1[103:119] # extremely-low chance of success - gambling
+df$left_mod[35:51] <- left$V1[120:136] # moderate chance of success - gambling
+df$left_high[35:51] <- left$V1[137:153] # high chance of success - gambling
+
+
+df$right_low[1:17] <- right$V1[ 1:17] # extremely-low chance of success - control
+df$right_mod[1:17] <- right$V1[18:34] # moderate chance of success - control
+df$right_high[1:17] <- right$V1[35:51] # high chance of success - control
+
+df$right_low[18:34] <- right$V1[52:68] # extremely-low chance of success - reward
+df$right_mod[18:34] <- right$V1[69:85] # moderate chance of success - reward
+df$right_high[18:34] <- right$V1[86:102] # high chance of success - reward
+
+df$right_low[35:51] <- right$V1[103:119] # extremely-low chance of success - gambling
+df$right_mod[35:51] <- right$V1[120:136] # moderate chance of success - gambling
+df$right_high[35:51] <- right$V1[137:153] # high chance of success - gambling
+
 
 #######################################################################
 ########################## 3  x 3  MIXED ANOVA ######################## 
@@ -369,6 +409,7 @@ varWithin <- "Chance of success" #fill
 levelWithinReordered <- c("High", "Moderate", "Extremely-low")
 groupNames <- c("No-reward", "Reward", "Gambling")
 title <- c("(A) Intrinsic motivation", "(B) Rewarding value", "(C) Activation pattern at (9 5 -8) and (-9 5 -8)")
+title <- c("(A) Intrinsic motivation", "(B) Rewarding value", "(C) Activation pattern at (10 6 -10) and (-8 6 -10)")
 xLab <- "Experimental group"
 yLab <- c("Rating", "Contrast estimate SW - WS")
 
@@ -421,6 +462,8 @@ df$avg_high <- (df$left_high + df$right_high)/2
 
 # creating data frame for plotting purposes
 peak <- describeBy(df[, c("avg_high", "avg_mod", "avg_low" )], group=df$cond)
+#peak <- describeBy(df[, c("left_high", "left_mod", "left_low" )], group=df$cond)
+#peak <- describeBy(df[, c("right_high", "right_mod", "right_low" )], group=df$cond)
 
 graph_peak <- as.data.frame(rbind(peak$`No-reward`, peak$Reward, peak$Gambling))
 graph_peak$cond <- rep(groupNames, each = 3)
@@ -433,7 +476,7 @@ outg_C <- ggplot(graph_peak, aes(cond, mean, fill = vars))  + theme_classic()
 outg_C <- outg_C + geom_bar(stat="identity", position="dodge") + geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.1, position=position_dodge(0.9)) +
   scale_x_discrete(limits=groupNames) + labs(x=xLab, y=yLab[2], fill = varWithin, title = title[3]) +
   theme(axis.text=element_text(size=axisSize), axis.title=element_text(size=axisSize, face="bold"), title=element_text(size = titleSize, face="bold"), legend.title = element_text(size=axisSize), legend.text = element_text(size = axisSize)) + 
-  coord_cartesian(ylim = c(-1, 8)) + scale_fill_brewer(palette = 14)
+  coord_cartesian(ylim = c(-1, 11)) + scale_fill_brewer(palette = 14)
 outg_C
 ggsave("Figure2C.jpeg")
 
