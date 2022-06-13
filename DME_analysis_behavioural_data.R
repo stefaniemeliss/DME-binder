@@ -19,23 +19,10 @@ library(car)
 library(lsmeans)
 source("anovakun_482.txt") # anovakun package retrieved from http://riseki.php.xdomain.jp/index.php?ANOVA君%2FANOVA君の使い方
 
-
-# download datasets from OSF
-#osfr::osf_auth("PleaseUnCommentAndPasteTheCodeFromTheEmailHere") # Authenticate osfr with a personal access token
-osfr::osf_retrieve_file("https://osf.io/qgbd6/") %>% # retrieve file from OSF
-  osfr::osf_download(conflicts = "overwrite") # and download it into project
-
 # read in data set
 df <- read.csv("Behaviour.csv")
+write.csv(df, file = "Behaviour.csv", row.names = F)
 
-# subset data set fMRI == 1: These are the 51 participants in the final fMRI sample
-df <- df[df$fMRI == 1,]
-
-# recode variable capturing between group mannipulation
-df$cond <- ifelse(df$cond == "C", "No-reward",
-                  ifelse(df$cond == "R", "Reward",
-                         ifelse(df$cond == "G", "Gambling", NA)))
-df$cond <- as.factor(df$cond)
 
 # ordering data in the same way as in SPM
 df$orderedcond <- rep(c(1, 3, 2), each =17)
@@ -159,7 +146,6 @@ df$val_ws <- (df$post27 + df$post28_r)/2 # watch stop
 
 # sleepr: How long do you regularly sleep?
 # sleepd: How long did you sleep last night
-# Easy/Mid/Dif/IAT: forget about them
 # Score: Total score that participants obtained
 
 
@@ -168,27 +154,10 @@ df$val_ws <- (df$post27 + df$post28_r)/2 # watch stop
 ######################################################################   
 
 # the contrast estimates come from the 2017_DME/GLM/GLM1/2nd-level/ANOVA/TwoWay/SWWS_/SPM.mat file
-# ROIs created in marsbar (Build ROI --> point coordinate --> peak voxel [-9 5 -8] and [9 5 -8]
-# ./points_coordinate_mm_-9_5_-8_roi.mat & ./points_coordinate_mm_9_5_-8_roi.mat
-# extracted ROI data saved in file ./extracted_point_coordinates_-9_5_-8_and_9_5_-8_mres.mat
-# txt.files created with ./save_extracted_contrast_estimates.m
-
-
-# download datasets from OSF
-#osfr::osf_auth("PleaseUnCommentAndPasteTheCodeFromTheEmailHere") # Authenticate osfr with a personal access token
-# left peak
-#osfr::osf_retrieve_file("https://osf.io/dyvrf/") %>% # retrieve file from OSF
-osfr::osf_retrieve_file("https://osf.io/uw2t7/") %>% # retrieve file from OSF
-  osfr::osf_download(conflicts = "overwrite") # and download it into project
-# right peak
-#osfr::osf_retrieve_file("https://osf.io/9mzsq/") %>% # retrieve file from OSF
-osfr::osf_retrieve_file("https://osf.io/jsmf9/") %>% # retrieve file from OSF
-  osfr::osf_download(conflicts = "overwrite") # and download it into project
+# ROIs created in marsbar (Build ROI --> point coordinate --> peak voxel [-8 6 -8] and [10 6 -8]
+# ./voxel_left_peak_-8_6_-8_roi.mat & ./voxel_right_peak_10_6_-10_roi.mat
 
 # read in values from .txt file 
-left <- read.delim("peak_leftStriatum_contrastEstimates.txt", header = F, sep = "\t")
-right <- read.delim("peak_rightStriatum_contrastEstimates.txt", header = F, sep = "\t")
-
 left <-  read.delim("estimates_left_peak_voxel.txt", header = F, sep = "\t")
 right <- read.delim("estimates_right_peak_voxel.txt", header = F, sep = "\t")
 
@@ -471,6 +440,13 @@ outg_C <- outg_C + geom_bar(stat="identity", position="dodge") + geom_errorbar(a
   coord_cartesian(ylim = c(-1, 11)) + scale_fill_brewer(palette = 14)
 outg_C
 ggsave("Figure2C.jpeg")
+
+# combine all images
+ggpubr::ggarrange(outg_A, outg_B, outg_C,
+                  #labels = c("A", "B", "C"),
+                  ncol = 2, nrow = 2, 
+                  common.legend = TRUE, legend="bottom")
+ggsave("Figure2.jpeg", height = 15, width = 30, units = "cm")
 
 #################################################################################  
 ##################### extract values for parametric modulation ################## 

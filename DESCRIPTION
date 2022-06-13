@@ -6,8 +6,8 @@ Authors@R:
     person(given = "Stefanie",
            family = "Meliss",
            role = c("aut", "cre"),
-           email = "s.meliss@reading.ac.uk",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           email = "s_meliss@outlook.com",
+           comment = c(ORCID = "0000-0003-2408-3309"))
 Description: Behavioural analysis on how task type and
     reward modulate intrinsic motivation and the striatal activation for
     extremely difficult task
