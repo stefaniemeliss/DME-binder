@@ -1,5 +1,5 @@
 Type: Compendium
-Package: Motivated for near impossibility
+Package: Motivation for near-impossibility
 Title: Behavioural Analysis
 Version: 0.0.1
 Authors@R: 
@@ -10,7 +10,7 @@ Authors@R:
            comment = c(ORCID = "0000-0003-2408-3309"))
 Description: Behavioural analysis on how task type and
     reward modulate intrinsic motivation and the striatal activation for
-    extremely difficult task
+    an extremely difficult task
 License: What license it uses
 Depends: 
     afex,

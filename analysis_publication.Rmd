@@ -1,7 +1,7 @@
 ---
-title: "DME_analysis_behavioural_data"
+title: "Motivation for near-impossibility"
 author: "Stef Meliss"
-date: "12/11/2021"
+date: "13/06/2022"
 output: html_document
 ---
 
@@ -31,14 +31,6 @@ source("anovakun_482.txt") # anovakun package retrieved from http://riseki.php.x
 
 # read in data set from r project (note: download needs to be done firstly)
 df <- read.csv("Behaviour.csv")
-
-# subset data set fMRI == 1: These are the 51 participants in the final fMRI sample
-df <- df[df$fMRI == 1,]
-
-# recode variable capturing between group mannipulation
-df$cond <- ifelse(df$cond == "C", "No-reward",
-                  ifelse(df$cond == "R", "Reward",
-                         ifelse(df$cond == "G", "Gambling", NA)))
 
 # ordering data in the same way as in SPM
 df$orderedcond <- rep(c(1, 3, 2), each =17)
@@ -163,9 +155,6 @@ anovakun_val <- anovakun_val[,c("id", "cond", "chance_success", "rating")]
 anovakun(anovakun_val, "AsB", 3, 3, long = T, geta = T)
 
 # read in values from .txt file 
-left <- read.delim("peak_leftStriatum_contrastEstimates.txt", header = F, sep = "\t")
-right <- read.delim("peak_rightStriatum_contrastEstimates.txt", header = F, sep = "\t")
-
 left <-  read.delim("estimates_left_peak_voxel.txt", header = F, sep = "\t")
 right <- read.delim("estimates_right_peak_voxel.txt", header = F, sep = "\t")
 
