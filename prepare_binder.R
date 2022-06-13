@@ -1,5 +1,5 @@
 library(holepunch)
-write_compendium_description(package = "Motivated for near impossibility", 
+write_compendium_description(package = "Motivation for near-impossibility", 
                              description = "Behavioural analysis on how task type and reward modulate intrinsic motivation and the striatal activation for extremely difficult task")
 # to write a description, with dependencies. Be sure to fill in placeholder text
 
